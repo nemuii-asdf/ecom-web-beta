@@ -1,0 +1,68 @@
+-- 1. Tạo Database
+CREATE DATABASE ProductManagement;
+USE ProductManagement;
+
+-- 2. Bảng Nhà phân phối (Distributor)
+-- Nơi cung cấp các sản phẩm vào hệ thống
+CREATE TABLE Distributors (
+    distributor_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    phone VARCHAR(20),
+    email VARCHAR(100) UNIQUE
+);
+
+-- 3. Bảng Đơn vị vận chuyển (Shipper)
+-- Đối tác giao hàng từ Nhà phân phối đến Người tiêu dùng
+CREATE TABLE Shippers (
+    shipper_id INT PRIMARY KEY AUTO_INCREMENT,
+    company_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    shipping_cost_base DECIMAL(10, 2) -- Phí vận chuyển cơ bản
+);
+
+-- 4. Bảng Người tiêu dùng (Customer)
+-- Khách hàng mua sắm trên hệ thống
+CREATE TABLE Customers (
+    customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(255) NOT NULL,
+    address TEXT,
+    phone VARCHAR(20) UNIQUE,
+    email VARCHAR(100) UNIQUE
+);
+
+-- 5. Bảng Sản phẩm (Product)
+-- Liên kết với Nhà phân phối (Mối quan hệ 1-n: 1 NCC có nhiều SP)
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_name VARCHAR(255) NOT NULL,
+    price DECIMAL(15, 2) NOT NULL,
+    stock_quantity INT DEFAULT 0,
+    distributor_id INT,
+    FOREIGN KEY (distributor_id) REFERENCES Distributors(distributor_id)
+);
+
+-- 6. Bảng Đơn hàng (Orders)
+-- Trung tâm kết nối Người mua, Người vận chuyển
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    customer_id INT,
+    shipper_id INT,
+    total_amount DECIMAL(15, 2),
+    order_status ENUM('Pending', 'Processing', 'Shipping', 'Delivered', 'Cancelled') DEFAULT 'Pending',
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
+    FOREIGN KEY (shipper_id) REFERENCES Shippers(shipper_id)
+);
+
+-- 7. Bảng Chi tiết đơn hàng (Order_Details)
+-- Chứa danh sách các sản phẩm trong một đơn hàng
+CREATE TABLE Order_Details (
+    order_detail_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT,
+    product_id INT,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(15, 2), -- Giá tại thời điểm mua
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
